@@ -5,7 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>フラッシュリング</title>
     <style>
-        /* 全体の背景と文字色（画像を再現） */
         body {
             background-color: #000000;
             color: #ffffff;
@@ -22,7 +21,6 @@
             max-width: 600px;
         }
 
-        /* タイトルエリア */
         h1 {
             text-align: center;
             font-size: 2.2rem;
@@ -30,14 +28,15 @@
             letter-spacing: 2px;
         }
 
-        /* 「試合準備OK！」ボタンとURL出力エリアのスタイル */
+        /* 確実にURLを表示・ジャンプするための新エリア */
         .setup-area {
             text-align: center;
             margin-bottom: 25px;
             display: flex;
             flex-direction: column;
             align-items: center;
-            gap: 10px;
+            gap: 12px;
+            width: 100%;
         }
         .ready-btn {
             background-color: #ffffff;
@@ -45,27 +44,34 @@
             font-weight: bold;
             font-size: 1.1rem;
             border: none;
-            padding: 10px 24px;
+            padding: 12px 30px;
             border-radius: 4px;
             cursor: pointer;
-            transition: background-color 0.2s;
+            box-shadow: 0 4px 6px rgba(255,255,255,0.1);
         }
-        .ready-btn:hover {
-            background-color: #cccccc;
-        }
-        .url-output {
-            background-color: #111111;
-            border: 1px solid #333333;
-            color: #00ffcc;
-            padding: 8px;
-            width: 100%;
-            font-size: 0.85rem;
-            word-break: break-all;
-            border-radius: 4px;
+        .ready-btn:hover { background-color: #cccccc; }
+        
+        .url-box {
             display: none;
+            background-color: #111;
+            border: 1px solid #444;
+            padding: 15px;
+            border-radius: 6px;
+            width: 100%;
+            box-sizing: border-box;
+            text-align: left;
         }
+        .url-box p { margin: 0 0 8px 0; font-size: 0.9rem; color: #aaa; }
+        .url-link {
+            display: block;
+            color: #00ffcc;
+            font-size: 0.9rem;
+            word-break: break-all;
+            margin-bottom: 12px;
+            text-decoration: underline;
+        }
+        .copy-hint { font-size: 0.75rem; color: #888; }
 
-        /* 試合情報・ヘッダー */
         .match-info {
             display: flex;
             justify-content: space-between;
@@ -73,10 +79,10 @@
             margin-bottom: 20px;
         }
 
-        /* 編集可能な場所のスタイル（4つのポイントのみ） */
         .editable {
             cursor: pointer;
             border-bottom: 1px dashed #555;
+            padding: 0 2px;
         }
         .editable:focus {
             background-color: #222;
@@ -96,7 +102,6 @@
             font-size: 0.9rem;
         }
 
-        /* メインの対戦エリア（3分割） */
         .battle-area {
             display: grid;
             grid-template-columns: 1fr 1.6fr 1fr;
@@ -113,21 +118,10 @@
             font-weight: bold;
             line-height: 1.6;
         }
-        .status-list li {
-            margin-bottom: 6px;
-        }
-        .status-val {
-            display: inline-block;
-            min-width: 20px;
-            text-align: center;
-        }
+        .status-list li { margin-bottom: 6px; }
+        .status-val { display: inline-block; min-width: 20px; text-align: center; }
 
-        /* 中央の行動ログ（技名が完全に一直線になるよう列幅を固定） */
-        .action-log {
-            display: flex;
-            flex-direction: column;
-            gap: 12px;
-        }
+        .action-log { display: flex; flex-direction: column; gap: 12px; }
         .action-row {
             display: grid;
             grid-template-columns: 65px 35px 60px 35px 65px;
@@ -136,17 +130,12 @@
             font-weight: bold;
             text-align: center;
         }
-        .damage-pop {
-            font-size: 0.75rem;
-            color: #ccc;
-            white-space: nowrap;
-        }
+        .damage-pop { font-size: 0.75rem; color: #ccc; white-space: nowrap; }
         .left-dmg { text-align: left; }
         .right-dmg { text-align: right; }
         .left-num { text-align: right; padding-right: 5px; }
         .right-num { text-align: left; padding-left: 5px; }
 
-        /* ダイスのログエリア */
         .dice-log-area {
             display: flex;
             justify-content: space-between;
@@ -156,39 +145,12 @@
             line-height: 1.4;
         }
 
-        /* 与えたダメージ */
-        .total-damage-section {
-            text-align: center;
-            margin-bottom: 30px;
-        }
-        .damage-title {
-            font-size: 1.3rem;
-            margin-bottom: 5px;
-            font-weight: bold;
-        }
-        .damage-scores {
-            display: flex;
-            justify-content: space-around;
-            font-size: 3.5rem;
-            font-weight: bold;
-        }
+        .total-damage-section { text-align: center; margin-bottom: 30px; }
+        .damage-title { font-size: 1.3rem; margin-bottom: 5px; font-weight: bold; }
+        .damage-scores { display: flex; justify-content: space-around; font-size: 3.5rem; font-weight: bold; }
 
-        /* 勝者アナウンス */
-        .winner-announce {
-            text-align: center;
-            font-size: 2.5rem;
-            font-weight: bold;
-            margin-top: 10px;
-            letter-spacing: 1px;
-        }
-
-        /* カウントダウン表示（確認用） */
-        .timer-status {
-            text-align: center;
-            font-size: 0.8rem;
-            color: #555;
-            margin-bottom: 10px;
-        }
+        .winner-announce { text-align: center; font-size: 2.5rem; font-weight: bold; margin-top: 10px; letter-spacing: 1px; }
+        .timer-status { text-align: center; font-size: 0.85rem; color: #888; margin-bottom: 10px; }
     </style>
 </head>
 <body>
@@ -196,38 +158,34 @@
 <div class="container">
     <h1>フラッシュリング</h1>
 
-    <!-- 試合情報 -->
+    <!-- 試合情報（4つの編集ポイント） -->
     <div class="match-info">
-        <!-- 編集ポイント①：選手Aの名前 -->
         <h2 class="player-header"><span class="editable" id="nameA" contenteditable="true">選手A</span></h2>
-        
         <div class="turn-details">
             <div style="font-size: 1.5rem; font-weight: bold; margin-bottom: 4px;">
-                <!-- 編集ポイント③：ターン数 -->
                 ターン数 <span class="editable" contenteditable="true" id="turnNum">4</span>
             </div>
-            <!-- 編集ポイント④：ダイスが振られる時刻設定 -->
             <div class="editable" contenteditable="true" id="targetTime">2026/08/23/23:00</div>
-            <!-- ターン数に応じたダイス結果が記録される場所 -->
-            <div id="headerDiceResult">4d6=2,1,6,3</div>
+            <div id="headerDiceResult">4d6=?...</div>
         </div>
-
-        <!-- 編集ポイント①：選手Bの名前 -->
         <h2 class="player-header" style="text-align: right;"><span class="editable" id="nameB" contenteditable="true">選手B</span></h2>
     </div>
 
-    <!-- 新設：試合準備OKボタンエリア -->
+    <!-- 試合準備エリア（新URL生成） -->
     <div class="setup-area">
-        <button class="ready-btn" onclick="generateShareURL()">試合準備OK！</button>
-        <div class="url-output" id="urlOutput" onclick="this.select();"></div>
+        <button class="ready-btn" onclick="generateShareURL()">試合準備OK！ URLを発行する</button>
+        <div class="url-box" id="urlBox">
+            <p>▼ この設定を反映した専用URLが完成しました：</p>
+            <a href="#" class="url-link" id="shareLink" target="_blank">ここにURLが入ります</a>
+            <div class="copy-hint">※上の緑色のURLをクリックすると、設定が固定された新しいサイトへ直接ジャンプできます。URLをコピーして保存・共有してください。</div>
+        </div>
     </div>
 
-    <!-- カウントダウン用タイマー -->
-    <div class="timer-status" id="timerStatus">タイマー待機中...</div>
+    <!-- タイマー状態表示 -->
+    <div class="timer-status" id="timerStatus">タイマー起動中...</div>
 
-    <!-- メイン対戦エリア -->
+    <!-- 対戦エリア -->
     <div class="battle-area">
-        <!-- 左：選手Aステータス（編集ポイント②：数値のみ編集可能） -->
         <ul class="status-list">
             <li>打撃 <span class="editable status-val" id="statA_1" contenteditable="true">6</span></li>
             <li>関節 <span class="editable status-val" id="statA_2" contenteditable="true">4</span></li>
@@ -237,12 +195,10 @@
             <li>性的 <span class="editable status-val" id="statA_6" contenteditable="true">1</span></li>
         </ul>
 
-        <!-- 中央：ターン行動ログ -->
         <div class="action-log" id="actionLogContainer">
-            <div style="text-align:center; color:#555; font-size:1rem; grid-column:span 5;">設定時刻を過ぎると結果が表示されます</div>
+            <div style="text-align:center; color:#555; font-size:1rem; grid-column:span 5;">設定時刻（またはそれ以降）になると自動で結果が計算・表示されます。</div>
         </div>
 
-        <!-- 右：選手Bステータス（編集ポイント②：数値のみ編集可能） -->
         <ul class="status-list" style="text-align: right;">
             <li>打撃 <span class="editable status-val" id="statB_1" contenteditable="true">3</span></li>
             <li>関節 <span class="editable status-val" id="statB_2" contenteditable="true">4</span></li>
@@ -253,13 +209,11 @@
         </ul>
     </div>
 
-    <!-- ダイス詳細ログ -->
     <div class="dice-log-area">
         <div id="diceLogA" style="white-space: pre-line;"></div>
         <div id="diceLogB" style="text-align: right; white-space: pre-line;"></div>
     </div>
 
-    <!-- 与えたダメージ（合計値の自動計算） -->
     <div class="total-damage-section">
         <div class="damage-title">与えたダメージ</div>
         <div class="damage-scores">
@@ -268,14 +222,12 @@
         </div>
     </div>
 
-    <!-- 勝敗 -->
     <div class="winner-announce" id="winnerDiv"><span id="winnerName">---</span>の勝利！</div>
 </div>
 
 <script>
     const skillNames = { 1: "打撃", 2: "関節", 3: "投げ", 4: "飛び", 5: "締め", 6: "性的" };
 
-    // 固定シード値（乱数生成器用）
     function mulberry32(a) {
         return function() {
           let t = a += 0x6D2B79F5;
@@ -287,7 +239,6 @@
 
     let randomFunc = Math.random;
 
-    // シード値付きダイスロール関数
     function rollDiceSeeded(count) {
         let results = [];
         let total = 0;
@@ -305,9 +256,22 @@
         return new Date(parts[0], parts[1] - 1, parts[2], parts[3], parts[4], 0);
     }
 
-    // --- 【新機能】現在の設定値からURL（パラメータ付き）を生成する機能 ---
+    // --- 改良版：確実に画面上にURLを表示してジャンプできるようにする関数 ---
     function generateShareURL() {
         const params = new URLSearchParams();
         params.set('nA', document.getElementById('nameA').innerText.trim());
         params.set('nB', document.getElementById('nameB').innerText.trim());
         params.set('tN', document.getElementById('turnNum').innerText.trim());
+        params.set('tM', document.getElementById('targetTime').innerText.trim());
+        
+        for(let i=1; i<=6; i++) {
+            params.set(`sA${i}`, document.getElementById(`statA_${i}`).innerText.trim());
+            params.set(`sB${i}`, document.getElementById(`statB_${i}`).innerText.trim());
+        }
+
+        const newURL = `${window.location.origin}${window.location.pathname}?${params.toString()}`;
+        
+        // 画面上に緑色のリンクとして表示する
+        const box = document.getElementById('urlBox');
+        const link = document.getElementById('shareLink');
+        link.innerText = newURL;
