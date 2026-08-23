@@ -28,7 +28,6 @@
             letter-spacing: 2px;
         }
 
-        /* ーーー 新設：絶対にエラーが起きない入力設定エリア ーーー */
         .config-panel {
             background-color: #111111;
             border: 1px solid #333333;
@@ -87,7 +86,6 @@
             padding: 4px;
         }
 
-        /* ボタン・URL枠エリア */
         .btn-area {
             text-align: center;
             margin-top: 15px;
@@ -129,7 +127,6 @@
         }
         .time-counter { text-align: center; font-size: 0.85rem; color: #ff3b30; margin-top: 5px; font-weight: bold; }
 
-        /* ーーー 試合画面のレイアウト ーーー */
         .match-display {
             border-top: 2px dashed #333333;
             padding-top: 30px;
@@ -208,9 +205,8 @@
 <div class="container">
     <h1>フラッシュリング</h1>
 
-    <!-- 🛠 安全な入力パネル（ここに入力されたものが下の画面とURLに確実に反映されます） -->
     <div class="config-panel">
-        <p class="config-title">⚙️ 試合条件の設定（ここに入力してください）</p>
+        <p class="config-title">⚙️ 試合条件の設定</p>
         
         <div class="config-row">
             <div class="config-group">
@@ -219,12 +215,11 @@
             </div>
             <div class="config-group">
                 <label>自動ダイス実行時刻</label>
-                <input type="text" id="inTime" value="2026/08/23/23:00" placeholder="YYYY/MM/DD/HH:MM">
+                <input type="text" id="inTime" value="2026/08/23/23:04" placeholder="YYYY/MM/DD/HH:MM">
             </div>
         </div>
 
         <div class="config-row">
-            <!-- 選手A -->
             <div class="config-group">
                 <label>選手A の名前</label>
                 <input type="text" id="inNameA" value="選手A">
@@ -238,7 +233,6 @@
                     <div>性的:<input type="number" id="inSA6" value="1"></div>
                 </div>
             </div>
-            <!-- 選手B -->
             <div class="config-group">
                 <label>選手B の名前</label>
                 <input type="text" id="inNameB" value="選手B">
@@ -254,19 +248,18 @@
             </div>
         </div>
 
-        <!-- ボタンとURL表示枠 -->
         <div class="btn-area">
+            <!-- 💡 この白い大きなボタンを1回クリックしてください -->
             <button class="ready-btn" onclick="generateShareURL()">試合準備OK！ URLを発行する</button>
             <div class="url-box-container">
                 <p>▼ 生成された専用URL（トリプルクリックで全選択できます）：</p>
+                <!-- ボタンを押すと、ここの中身が自動的にURLに書き換わります -->
                 <input type="text" class="url-field" id="urlField" value="設定を完了して上のボタンを押してください" readonly onclick="this.select();">
                 <div class="time-counter" id="timeCounterNotice"></div>
             </div>
         </div>
     </div>
 
-
-    <!-- ーーー ここから下は実際の試合画面表示 ーーー -->
     <div class="match-display">
         <div class="match-info">
             <h2 class="player-header" id="dispNameA">選手A</h2>
@@ -274,17 +267,21 @@
                 <div style="font-size: 1.5rem; font-weight: bold; margin-bottom: 4px;">
                     ターン数 <span id="dispTurn">4</span>
                 </div>
-                <div id="dispTime">2026/08/23/23:00</div>
+                <div id="dispTime">2026/08/23/23:04</div>
                 <div id="headerDiceResult">4d6=?</div>
             </div>
             <h2 class="player-header" style="text-align: right;" id="dispNameB">選手B</h2>
         </div>
 
         <div class="battle-area">
-            <!-- 左ステータス -->
             <ul class="status-list">
                 <li>打撃 <span class="status-val" id="dispSA1">6</span></li>
                 <li>関節 <span class="status-val" id="dispSA2">4</span></li>
                 <li>投げ <span class="status-val" id="dispSA3">3</span></li>
                 <li>飛び <span class="status-val" id="dispSA4">3</span></li>
                 <li>締め <span class="status-val" id="dispSA5">3</span></li>
+                <li>性的 <span class="status-val" id="dispSA6">1</span></li>
+            </ul>
+
+            <div class="action-log" id="actionLogContainer">
+                <div style="text-align:center; color:#555; font-size:1rem; grid-column:span 5;">設定時刻を過ぎると結果がここに表示されます。</div>
