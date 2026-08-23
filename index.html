@@ -26,8 +26,43 @@
         h1 {
             text-align: center;
             font-size: 2.2rem;
-            margin-bottom: 30px;
+            margin-bottom: 20px;
             letter-spacing: 2px;
+        }
+
+        /* 「試合準備OK！」ボタンとURL出力エリアのスタイル */
+        .setup-area {
+            text-align: center;
+            margin-bottom: 25px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 10px;
+        }
+        .ready-btn {
+            background-color: #ffffff;
+            color: #000000;
+            font-weight: bold;
+            font-size: 1.1rem;
+            border: none;
+            padding: 10px 24px;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+        .ready-btn:hover {
+            background-color: #cccccc;
+        }
+        .url-output {
+            background-color: #111111;
+            border: 1px solid #333333;
+            color: #00ffcc;
+            padding: 8px;
+            width: 100%;
+            font-size: 0.85rem;
+            word-break: break-all;
+            border-radius: 4px;
+            display: none;
         }
 
         /* 試合情報・ヘッダー */
@@ -95,7 +130,6 @@
         }
         .action-row {
             display: grid;
-            /* 左右のダメージ、ダイス合計値、中央の技名用に固定幅を割り振り */
             grid-template-columns: 65px 35px 60px 35px 65px;
             align-items: center;
             font-size: 1.5rem;
@@ -162,9 +196,6 @@
 <div class="container">
     <h1>フラッシュリング</h1>
 
-    <!-- カウントダウン用タイマー（時間になると消えます） -->
-    <div class="timer-status" id="timerStatus">タイマー待機中...</div>
-
     <!-- 試合情報 -->
     <div class="match-info">
         <!-- 編集ポイント①：選手Aの名前 -->
@@ -185,6 +216,15 @@
         <h2 class="player-header" style="text-align: right;"><span class="editable" id="nameB" contenteditable="true">選手B</span></h2>
     </div>
 
+    <!-- 新設：試合準備OKボタンエリア -->
+    <div class="setup-area">
+        <button class="ready-btn" onclick="generateShareURL()">試合準備OK！</button>
+        <div class="url-output" id="urlOutput" onclick="this.select();"></div>
+    </div>
+
+    <!-- カウントダウン用タイマー -->
+    <div class="timer-status" id="timerStatus">タイマー待機中...</div>
+
     <!-- メイン対戦エリア -->
     <div class="battle-area">
         <!-- 左：選手Aステータス（編集ポイント②：数値のみ編集可能） -->
@@ -197,10 +237,9 @@
             <li>性的 <span class="editable status-val" id="statA_6" contenteditable="true">1</span></li>
         </ul>
 
-        <!-- 中央：ターン行動ログ（自動生成される場所 / 中央の技名は一直線に整列） -->
+        <!-- 中央：ターン行動ログ -->
         <div class="action-log" id="actionLogContainer">
-            <!-- ここに自動でターン行が追加されます -->
-            <div style="text-align:center; color:#555; font-size:1rem; grid-column:span 5;">時間を設定するとここにログが生成されます</div>
+            <div style="text-align:center; color:#555; font-size:1rem; grid-column:span 5;">設定時刻を過ぎると結果が表示されます</div>
         </div>
 
         <!-- 右：選手Bステータス（編集ポイント②：数値のみ編集可能） -->
@@ -234,71 +273,41 @@
 </div>
 
 <script>
-    // 技の定義（出目に対応）
     const skillNames = { 1: "打撃", 2: "関節", 3: "投げ", 4: "飛び", 5: "締め", 6: "性的" };
 
-    // ダイスを振る共通関数
-    function rollDice(count) {
+    // 固定シード値（乱数生成器用）
+    function mulberry32(a) {
+        return function() {
+          let t = a += 0x6D2B79F5;
+          t = Math.imul(t ^ (t >>> 15), t | 1);
+          t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
+          return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+        }
+    }
+
+    let randomFunc = Math.random;
+
+    // シード値付きダイスロール関数
+    function rollDiceSeeded(count) {
         let results = [];
         let total = 0;
         for (let i = 0; i < count; i++) {
-            let roll = Math.floor(Math.random() * 6) + 1;
+            let roll = Math.floor(randomFunc() * 6) + 1;
             results.push(roll);
             total += roll;
         }
         return { results, total };
     }
 
-    // 時刻文字列をDateに変換
     function parseTargetTime(str) {
         const parts = str.trim().split(/[\/\:]/);
         if (parts.length < 5) return null;
         return new Date(parts[0], parts[1] - 1, parts[2], parts[3], parts[4], 0);
     }
 
-    let diceRolled = false;
-
-    // 1秒ごとの監視ループ
-    setInterval(() => {
-        const timeStr = document.getElementById('targetTime').innerText;
-        const targetDate = parseTargetTime(timeStr);
-        const statusDiv = document.getElementById('timerStatus');
-
-        if (!targetDate || isNaN(targetDate.getTime())) {
-            statusDiv.innerText = "時刻エラー (例: 2026/08/23/23:00)";
-            return;
-        }
-
-        const now = new Date();
-        const diff = targetDate.getTime() - now.getTime();
-
-        if (diff > 0) {
-            statusDiv.innerText = `ダイス実行まであと: ${Math.ceil(diff / 1000)}秒`;
-            diceRolled = false;
-        } else {
-            if (!diceRolled) {
-                executeTRPGRules();
-                diceRolled = true;
-            }
-            statusDiv.innerText = "ダイス処理完了";
-        }
-    }, 1000);
-
-    // TRPGルールに基づくダイス処理とログ生成の核心部分
-    function executeTRPGRules() {
-        // 1. ターン数を取得し、その数だけd6を振って技種を決定
-        const turnCount = parseInt(document.getElementById('turnNum').innerText) || 1;
-        const turnDice = rollDice(turnCount);
-        document.getElementById('headerDiceResult').innerText = `${turnCount}d6=${turnDice.results.join(',')}`;
-
-        // 2. プレイヤーの現在のステータス値（ダイス個数）を取得
-        const statsA = {
-            1: parseInt(document.getElementById('statA_1').innerText) || 0,
-            2: parseInt(document.getElementById('statA_2').innerText) || 0,
-            3: parseInt(document.getElementById('statA_3').innerText) || 0,
-            4: parseInt(document.getElementById('statA_4').innerText) || 0,
-            5: parseInt(document.getElementById('statA_5').innerText) || 0,
-            6: parseInt(document.getElementById('statA_6').innerText) || 0
-        };
-        const statsB = {
-コードは注意してご使用ください。1: parseInt(document.getElementById('statB_1').innerText) || 0,2: parseInt(document.getElementById('statB_2').innerText) || 0,3: parseInt(document.getElementById('statB_3').innerText) || 0,4: parseInt(document.getElementById('statB_4').innerText) || 0,5: parseInt(document.getElementById('statB_5').innerText) || 0,6: parseInt(document.getElementById('statB_6').innerText) || 0};// 各エリアのリセットconst container = document.getElementById('actionLogContainer');container.innerHTML = '';let logTextA = "";let logTextB = "";let totalDamageA = 0;let totalDamageB = 0;// 3. 決まった技種の順番（出目の順番）に処理を実行turnDice.results.forEach((diceOut) => {const skillName = skillNames[diceOut]; // 出目に対応する技名// 選手A・Bのその技に対するステータス（ダイス個数）を取得const diceCountA = statsA[diceOut];const diceCountB = statsB[diceOut];// それぞれダイスを振るconst rollA = rollDice(diceCountA);const rollB = rollDice(diceCountB);// 詳細ダイスログテキストの構築logTextA += ${diceCountA}d6=${rollA.results.join(',') || '0'}\n;logTextB += ${diceCountB}d6=${rollB.results.join(',') || '0'}\n;// 出目の合計値が大きい方がダメージを与える（同点なら0）let dmgA = 0;let dmgB = 0;let popTextA = "";let popTextB = "";if (rollA.total > rollB.total) {dmgA = rollA.total - rollB.total; // 差分をダメージとする（ルールに応じて変更可）totalDamageA += dmgA;popTextA = ${dmgA}ダメージ;} else if (rollB.total > rollA.total) {dmgB = rollB.total - rollA.total;totalDamageB += dmgB;popTextB = ${dmgB}ダメージ;}// 一直線に揃うグリッド行（HTML要素）を作成して画面の中央に追加const row = document.createElement('div');row.className = 'action-row';row.innerHTML = <span class="damage-pop left-dmg">${popTextA}</span> <span class="left-num">${rollA.total}</span> <span>${skillName}</span> <span class="right-num">${rollB.total}</span> <span class="damage-pop right-dmg">${popTextB}</span>;container.appendChild(row);});// 4. 下部ログと合計ダメージの書き換えdocument.getElementById('diceLogA').innerText = logTextA.trim();document.getElementById('diceLogB').innerText = logTextB.trim();document.getElementById('totalDmgA').innerText = totalDamageA;document.getElementById('totalDmgB').innerText = totalDamageB;// 5. 最終的な勝利判定（与えた合計ダメージが多い方）const nameA = document.getElementById('nameA').innerText;const nameB = document.getElementById('nameB').innerText;if (totalDamageA > totalDamageB) {document.getElementById('winnerName').innerText = nameA;} else if (totalDamageB > totalDamageA) {document.getElementById('winnerName').innerText = nameB;} else {document.getElementById('winnerDiv').innerText = "引き分け！";}}
+    // --- 【新機能】現在の設定値からURL（パラメータ付き）を生成する機能 ---
+    function generateShareURL() {
+        const params = new URLSearchParams();
+        params.set('nA', document.getElementById('nameA').innerText.trim());
+        params.set('nB', document.getElementById('nameB').innerText.trim());
+        params.set('tN', document.getElementById('turnNum').innerText.trim());
