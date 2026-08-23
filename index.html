@@ -24,18 +24,76 @@
         h1 {
             text-align: center;
             font-size: 2.2rem;
-            margin-bottom: 20px;
+            margin-bottom: 25px;
             letter-spacing: 2px;
         }
 
-        /* 試合設定・ボタンエリア */
-        .setup-area {
-            text-align: center;
-            margin-bottom: 25px;
+        /* ーーー 新設：絶対にエラーが起きない入力設定エリア ーーー */
+        .config-panel {
+            background-color: #111111;
+            border: 1px solid #333333;
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 30px;
+            width: 100%;
+            box-sizing: border-box;
+        }
+        .config-title {
+            margin: 0 0 12px 0;
+            font-size: 1rem;
+            font-weight: bold;
+            color: #aaaaaa;
+            border-bottom: 1px solid #222222;
+            padding-bottom: 4px;
+        }
+        .config-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            margin-bottom: 15px;
+        }
+        .config-group {
             display: flex;
             flex-direction: column;
+            gap: 5px;
+        }
+        .config-group label {
+            font-size: 0.8rem;
+            color: #888888;
+            font-weight: bold;
+        }
+        .config-group input {
+            background-color: #222222;
+            border: 1px solid #444444;
+            color: #ffffff;
+            padding: 8px;
+            border-radius: 4px;
+            font-size: 0.95rem;
+        }
+        .config-sub-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 6px;
+        }
+        .config-sub-grid div {
+            display: flex;
             align-items: center;
-            gap: 12px;
+            gap: 4px;
+            font-size: 0.85rem;
+            color: #cccccc;
+        }
+        .config-sub-grid input {
+            width: 100%;
+            padding: 4px;
+        }
+
+        /* ボタン・URL枠エリア */
+        .btn-area {
+            text-align: center;
+            margin-top: 15px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
             width: 100%;
         }
         .ready-btn {
@@ -51,62 +109,44 @@
         }
         .ready-btn:hover { background-color: #cccccc; }
         
-        /* タイマーの代わりに常設する、URL表示専用のテキストボックス枠 */
-        .url-display-box {
-            background-color: #111111;
+        .url-box-container {
+            background-color: #1a1a1a;
             border: 1px solid #444444;
             padding: 12px;
             border-radius: 6px;
-            width: 100%;
-            box-sizing: border-box;
             text-align: left;
         }
-        .url-display-box p {
-            margin: 0 0 6px 0;
-            font-size: 0.85rem;
-            color: #888888;
-            font-weight: bold;
-        }
-        /* コピペしやすいようにinput要素で枠を作成 */
-        .url-input-field {
+        .url-box-container p { margin: 0 0 6px 0; font-size: 0.85rem; color: #ff9900; font-weight: bold; }
+        .url-field {
             width: 100%;
-            background-color: #222222;
+            background-color: #000000;
             border: 1px solid #555555;
             color: #00ffcc;
             padding: 8px;
             font-size: 0.9rem;
             border-radius: 4px;
             box-sizing: border-box;
-            font-family: monospace;
         }
+        .time-counter { text-align: center; font-size: 0.85rem; color: #ff3b30; margin-top: 5px; font-weight: bold; }
 
+        /* ーーー 試合画面のレイアウト ーーー */
+        .match-display {
+            border-top: 2px dashed #333333;
+            padding-top: 30px;
+            margin-top: 10px;
+            width: 100%;
+        }
         .match-info {
             display: flex;
             justify-content: space-between;
             align-items: flex-start;
             margin-bottom: 20px;
         }
-
-        /* 編集可能エリア（改行を防ぎ、文字だけをスマートに入力させる設定） */
-        .editable {
-            cursor: pointer;
-            border-bottom: 1px dashed #555;
-            padding: 0 4px;
-            display: inline-block;
-            white-space: nowrap;
-        }
-        .editable:focus {
-            background-color: #222;
-            outline: none;
-            border-bottom: 1px solid #fff;
-        }
-
         .player-header {
             font-size: 1.8rem;
             margin: 0;
             font-weight: bold;
-            display: inline-block;
-            min-width: 100px;
+            min-width: 120px;
         }
         .turn-details {
             text-align: center;
@@ -130,7 +170,7 @@
             line-height: 1.6;
         }
         .status-list li { margin-bottom: 6px; }
-        .status-val { display: inline-block; min-width: 20px; text-align: center; }
+        .status-val { display: inline-block; min-width: 20px; text-align: center; color: #00ffcc; }
 
         .action-log { display: flex; flex-direction: column; gap: 12px; }
         .action-row {
@@ -161,7 +201,6 @@
         .damage-scores { display: flex; justify-content: space-around; font-size: 3.5rem; font-weight: bold; }
 
         .winner-announce { text-align: center; font-size: 2.5rem; font-weight: bold; margin-top: 10px; letter-spacing: 1px; }
-        .time-notice { text-align: center; font-size: 0.8rem; color: #666; margin-top: 5px; }
     </style>
 </head>
 <body>
@@ -169,111 +208,83 @@
 <div class="container">
     <h1>フラッシュリング</h1>
 
-    <!-- 試合情報（4つの編集ポイント） -->
-    <div class="match-info">
-        <h2 class="player-header"><span class="editable" id="nameA" contenteditable="true" plaintext-only>選手A</span></h2>
-        <div class="turn-details">
-            <div style="font-size: 1.5rem; font-weight: bold; margin-bottom: 4px;">
-                ターン数 <span class="editable" contenteditable="true" id="turnNum" plaintext-only>4</span>
+    <!-- 🛠 安全な入力パネル（ここに入力されたものが下の画面とURLに確実に反映されます） -->
+    <div class="config-panel">
+        <p class="config-title">⚙️ 試合条件の設定（ここに入力してください）</p>
+        
+        <div class="config-row">
+            <div class="config-group">
+                <label>ターン数</label>
+                <input type="number" id="inTurn" value="4">
             </div>
-            <div class="editable" contenteditable="true" id="targetTime" plaintext-only>2026/08/23/23:00</div>
-            <div id="headerDiceResult">4d6=?</div>
-        </div>
-        <h2 class="player-header" style="text-align: right;"><span class="editable" id="nameB" contenteditable="true" plaintext-only>選手B</span></h2>
-    </div>
-
-    <!-- 💡 タイマーを廃止し、最初から配置されたURL専用枠 -->
-    <div class="setup-area">
-        <button class="ready-btn" onclick="generateShareURL()">試合準備OK！ URLを発行する</button>
-        <div class="url-display-box">
-            <p id="boxLabel">状態: 設定を入力中...（完了したら上のボタンを押してください）</p>
-            <input type="text" class="url-input-field" id="urlInputField" value="ここに専用のURLが生成されます" readonly onclick="this.select();">
-            <div class="time-notice" id="timeRemainingNotice"></div>
-        </div>
-    </div>
-
-    <!-- 対戦エリア -->
-    <div class="battle-area">
-        <ul class="status-list">
-            <li>打撃 <span class="editable status-val" id="statA_1" contenteditable="true" plaintext-only>6</span></li>
-            <li>関節 <span class="editable status-val" id="statA_2" contenteditable="true" plaintext-only>4</span></li>
-            <li>投げ <span class="editable status-val" id="statA_3" contenteditable="true" plaintext-only>3</span></li>
-            <li>飛び <span class="editable status-val" id="statA_4" contenteditable="true" plaintext-only>3</span></li>
-            <li>締め <span class="editable status-val" id="statA_5" contenteditable="true" plaintext-only>3</span></li>
-            <li>性的 <span class="editable status-val" id="statA_6" contenteditable="true" plaintext-only>1</span></li>
-        </ul>
-
-        <div class="action-log" id="actionLogContainer">
-            <div style="text-align:center; color:#555; font-size:1rem; grid-column:span 5;">設定時刻になると自動で結果が表示されます。</div>
+            <div class="config-group">
+                <label>自動ダイス実行時刻</label>
+                <input type="text" id="inTime" value="2026/08/23/23:00" placeholder="YYYY/MM/DD/HH:MM">
+            </div>
         </div>
 
-        <ul class="status-list" style="text-align: right;">
-            <li>打撃 <span class="editable status-val" id="statB_1" contenteditable="true" plaintext-only>3</span></li>
-            <li>関節 <span class="editable status-val" id="statB_2" contenteditable="true" plaintext-only>4</span></li>
-            <li>投げ <span class="editable status-val" id="statB_3" contenteditable="true" plaintext-only>2</span></li>
-            <li>飛び <span class="editable status-val" id="statB_4" contenteditable="true" plaintext-only>4</span></li>
-            <li>締め <span class="editable status-val" id="statB_5" contenteditable="true" plaintext-only>1</span></li>
-            <li>性的 <span class="editable status-val" id="statB_6" contenteditable="true" plaintext-only>6</span></li>
-        </ul>
-    </div>
+        <div class="config-row">
+            <!-- 選手A -->
+            <div class="config-group">
+                <label>選手A の名前</label>
+                <input type="text" id="inNameA" value="選手A">
+                <label style="margin-top:5px;">ステータス</label>
+                <div class="config-sub-grid">
+                    <div>打撃:<input type="number" id="inSA1" value="6"></div>
+                    <div>関節:<input type="number" id="inSA2" value="4"></div>
+                    <div>投げ:<input type="number" id="inSA3" value="3"></div>
+                    <div>飛び:<input type="number" id="inSA4" value="3"></div>
+                    <div>締め:<input type="number" id="inSA5" value="3"></div>
+                    <div>性的:<input type="number" id="inSA6" value="1"></div>
+                </div>
+            </div>
+            <!-- 選手B -->
+            <div class="config-group">
+                <label>選手B の名前</label>
+                <input type="text" id="inNameB" value="選手B">
+                <label style="margin-top:5px;">ステータス</label>
+                <div class="config-sub-grid">
+                    <div>打撃:<input type="number" id="inSB1" value="3"></div>
+                    <div>関節:<input type="number" id="inSB2" value="4"></div>
+                    <div>投げ:<input type="number" id="inSB3" value="2"></div>
+                    <div>飛び:<input type="number" id="inSB4" value="4"></div>
+                    <div>締め:<input type="number" id="inSB5" value="1"></div>
+                    <div>性的:<input type="number" id="inSB6" value="6"></div>
+                </div>
+            </div>
+        </div>
 
-    <div class="dice-log-area">
-        <div id="diceLogA" style="white-space: pre-line;"></div>
-        <div id="diceLogB" style="text-align: right; white-space: pre-line;"></div>
-    </div>
-
-    <div class="total-damage-section">
-        <div class="damage-title">与えたダメージ</div>
-        <div class="damage-scores">
-            <span id="totalDmgA">0</span>
-            <span id="totalDmgB">0</span>
+        <!-- ボタンとURL表示枠 -->
+        <div class="btn-area">
+            <button class="ready-btn" onclick="generateShareURL()">試合準備OK！ URLを発行する</button>
+            <div class="url-box-container">
+                <p>▼ 生成された専用URL（トリプルクリックで全選択できます）：</p>
+                <input type="text" class="url-field" id="urlField" value="設定を完了して上のボタンを押してください" readonly onclick="this.select();">
+                <div class="time-counter" id="timeCounterNotice"></div>
+            </div>
         </div>
     </div>
 
-    <div class="winner-announce" id="winnerDiv"><span id="winnerName">---</span>の勝利！</div>
-</div>
 
-<script>
-    const skillNames = { 1: "打撃", 2: "関節", 3: "投げ", 4: "飛び", 5: "締め", 6: "性的" };
+    <!-- ーーー ここから下は実際の試合画面表示 ーーー -->
+    <div class="match-display">
+        <div class="match-info">
+            <h2 class="player-header" id="dispNameA">選手A</h2>
+            <div class="turn-details">
+                <div style="font-size: 1.5rem; font-weight: bold; margin-bottom: 4px;">
+                    ターン数 <span id="dispTurn">4</span>
+                </div>
+                <div id="dispTime">2026/08/23/23:00</div>
+                <div id="headerDiceResult">4d6=?</div>
+            </div>
+            <h2 class="player-header" style="text-align: right;" id="dispNameB">選手B</h2>
+        </div>
 
-    function mulberry32(a) {
-        return function() {
-          let t = a += 0x6D2B79F5;
-          t = Math.imul(t ^ (t >>> 15), t | 1);
-          t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
-          return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
-        }
-    }
-
-    let randomFunc = Math.random;
-
-    function rollDiceSeeded(count) {
-        let results = [];
-        let total = 0;
-        for (let i = 0; i < count; i++) {
-            let roll = Math.floor(randomFunc() * 6) + 1;
-            results.push(roll);
-            total += roll;
-        }
-        return { results, total };
-    }
-
-    // 安全に文字を取得する共通関数（余分な空白や改行を徹底排除）
-    function getCleanText(id) {
-        return document.getElementById(id).innerText.replace(/\s+/g, '');
-    }
-
-    function parseTargetTime(str) {
-        const parts = str.split(/[\/\:]/);
-        if (parts.length < 5) return null;
-        return new Date(parts[0], parts[1] - 1, parts[2], parts[3], parts[4], 0);
-    }
-
-    // 💡 エラーを起こさず、枠の中に確実にURLを出力する新システム
-    function generateShareURL() {
-        const params = new URLSearchParams();
-        params.set('nA', getCleanText('nameA'));
-        params.set('nB', getCleanText('nameB'));
-        params.set('tN', getCleanText('turnNum'));
-        params.set('tM', getCleanText('targetTime'));
-コードは注意してご使用ください。for(let i=1; i<=6; i++) {params.set(sA${i}, getCleanText(statA_${i}));params.set(sB${i}, getCleanText(statB_${i}));}const newURL = ${window.location.origin}${window.location.pathname}?${params.toString()};// 画面中央のテキストフィールドにURLを直接書き込むdocument.getElementById('boxLabel').innerText = "▼ 共有用URLが完成しました！（タップしてコピー可能）";const inputField = document.getElementById('urlInputField');inputField.value = newURL;inputField.select(); // 自動で選択状態にする}// URLからデータを復元する機能function loadParamsFromURL() {const params = new URLSearchParams(window.location.search);if (!params.has('nA')) return;document.getElementById('nameA').innerText = params.get('nA');document.getElementById('nameB').innerText = params.get('nB');document.getElementById('turnNum').innerText = params.get('tN');document.getElementById('targetTime').innerText = params.get('tM');for(let i=1; i<=6; i++) {if(params.has(sA${i})) document.getElementById(statA_${i}).innerText = params.get(sA${i});if(params.has(sB${i})) document.getElementById(statB_${i}).innerText = params.get(sB${i});}}loadParamsFromURL();// 常に動作するタイマーループsetInterval(() => {const timeStr = getCleanText('targetTime');const targetDate = parseTargetTime(timeStr);const noticeDiv = document.getElementById('timeRemainingNotice');if (!targetDate || isNaN(targetDate.getTime())) {noticeDiv.innerText = "時刻形式エラー (例: 2026/08/23/23:00)";return;}const now = new Date();const diff = targetDate.getTime() - now.getTime();if (diff > 0) {noticeDiv.innerText = 試合開始（自動ダイス実行）まであと: ${Math.ceil(diff / 1000)}秒;} else {noticeDiv.innerText = "ダイス処理完了：試合結果が確定しています";randomFunc = mulberry32(targetDate.getTime());executeTRPGRules();}}, 1000);function executeTRPGRules() {const turnCount = parseInt(getCleanText('turnNum')) || 1;const turnDice = rollDiceSeeded(turnCount);document.getElementById('headerDiceResult').innerText = ${turnCount}d6=${turnDice.results.join(',')};const statsA = {}, statsB = {};for(let i=1; i<=6; i++) {statsA[i] = parseInt(getCleanText(statA_${i})) || 0;statsB[i] = parseInt(getCleanText(statB_${i})) || 0;}const container = document.getElementById('actionLogContainer');container.innerHTML = '';let logTextA = "", logTextB = "", totalDamageA = 0, totalDamageB = 0;turnDice.results.forEach((diceOut) => {const skillName = skillNames[diceOut];const diceCountA = statsA[diceOut];const diceCountB = statsB[diceOut];const rollA = rollDiceSeeded(diceCountA);const rollB = rollDiceSeeded(diceCountB);logTextA += ${diceCountA}d6=${rollA.results.join(',') || '0'}\n;logTextB += ${diceCountB}d6=${rollB.results.join(',') || '0'}\n;let dmgA = 0, dmgB = 0, popTextA = "", popTextB = "";if (rollA.total > rollB.total) {dmgA = rollA.total - rollB.total;totalDamageA += dmgA;popTextA = ${dmgA}ダメージ;} else if (rollB.total > rollA.total) {dmgB = rollB.total - rollA.total;totalDamageB += dmgB;popTextB = ${dmgB}ダメージ;}const row = document.createElement('div');row.className = 'action-row';row.innerHTML = <span class="damage-pop left-dmg">${popTextA}</span> <span class="left-num">${rollA.total}</span> <span>${skillName}</span> <span class="right-num">${rollB.total}</span> <span class="damage-pop right-dmg">${popTextB}</span>;container.appendChild(row);});document.getElementById('diceLogA').innerText = logTextA.trim();document.getElementById('diceLogB').innerText = logTextB.trim();document.getElementById('totalDmgA').innerText = totalDamageA;document.getElementById('totalDmgB').innerText = totalDamageB;const nameA = document.getElementById('nameA').innerText;const nameB = document.getElementById('nameB').innerText;if (totalDamageA > totalDamageB) {document.getElementById('winnerName').innerText = nameA;} else if (totalDamageB > totalDamageA) {document.getElementById('winnerName').innerText = nameB;} else {document.getElementById('winnerName').innerText = "引き分け";}}
+        <div class="battle-area">
+            <!-- 左ステータス -->
+            <ul class="status-list">
+                <li>打撃 <span class="status-val" id="dispSA1">6</span></li>
+                <li>関節 <span class="status-val" id="dispSA2">4</span></li>
+                <li>投げ <span class="status-val" id="dispSA3">3</span></li>
+                <li>飛び <span class="status-val" id="dispSA4">3</span></li>
+                <li>締め <span class="status-val" id="dispSA5">3</span></li>
