@@ -38,7 +38,7 @@
             margin-bottom: 20px;
         }
 
-        /* 編集可能な場所のスタイル */
+        /* 編集可能な場所のスタイル（4つのポイントのみ） */
         .editable {
             cursor: pointer;
             border-bottom: 1px dashed #555;
@@ -64,7 +64,7 @@
         /* メインの対戦エリア（3分割） */
         .battle-area {
             display: grid;
-            grid-template-columns: 1fr 1.5fr 1fr;
+            grid-template-columns: 1fr 1.6fr 1fr;
             gap: 10px;
             align-items: center;
             margin-bottom: 30px;
@@ -87,7 +87,7 @@
             text-align: center;
         }
 
-        /* 中央の行動ログ（一直線に美しく揃える設定） */
+        /* 中央の行動ログ（技名が完全に一直線になるよう列幅を固定） */
         .action-log {
             display: flex;
             flex-direction: column;
@@ -95,8 +95,8 @@
         }
         .action-row {
             display: grid;
-            /* 5つの列の幅を固定して、中央の技名（関節・打撃など）が必ず一直線になるように配置 */
-            grid-template-columns: 55px 35px 60px 35px 55px;
+            /* 左右のダメージ、ダイス合計値、中央の技名用に固定幅を割り振り */
+            grid-template-columns: 65px 35px 60px 35px 65px;
             align-items: center;
             font-size: 1.5rem;
             font-weight: bold;
@@ -148,7 +148,7 @@
             letter-spacing: 1px;
         }
 
-        /* 自動実行のタイマー状態表示（目立たないデザイン） */
+        /* カウントダウン表示（確認用） */
         .timer-status {
             text-align: center;
             font-size: 0.8rem;
@@ -160,144 +160,145 @@
 <body>
 
 <div class="container">
-    <!-- タイトル -->
     <h1>フラッシュリング</h1>
 
-    <!-- 内部的なタイマー状態（デバッグ・確認用） -->
+    <!-- カウントダウン用タイマー（時間になると消えます） -->
     <div class="timer-status" id="timerStatus">タイマー待機中...</div>
 
     <!-- 試合情報 -->
     <div class="match-info">
-        <!-- ①【編集可】キャラ名A -->
+        <!-- 編集ポイント①：選手Aの名前 -->
         <h2 class="player-header"><span class="editable" id="nameA" contenteditable="true">選手A</span></h2>
+        
         <div class="turn-details">
             <div style="font-size: 1.5rem; font-weight: bold; margin-bottom: 4px;">
-                <!-- ③【編集可】ターン数 -->
+                <!-- 編集ポイント③：ターン数 -->
                 ターン数 <span class="editable" contenteditable="true" id="turnNum">4</span>
             </div>
-            <!-- ④【編集可】ダイスが振られる時刻設定（YYYY/MM/DD/HH:MM 形式） -->
-            <div class="editable" contenteditable="true" id="targetTime">2026/08/10/23:00</div>
-            <!-- 自動ダイスの結果が記録される場所 -->
+            <!-- 編集ポイント④：ダイスが振られる時刻設定 -->
+            <div class="editable" contenteditable="true" id="targetTime">2026/08/23/23:00</div>
+            <!-- ターン数に応じたダイス結果が記録される場所 -->
             <div id="headerDiceResult">4d6=2,1,6,3</div>
         </div>
-        <!-- ①【編集可】キャラ名B -->
+
+        <!-- 編集ポイント①：選手Bの名前 -->
         <h2 class="player-header" style="text-align: right;"><span class="editable" id="nameB" contenteditable="true">選手B</span></h2>
     </div>
 
     <!-- メイン対戦エリア -->
     <div class="battle-area">
-        <!-- 左：選手Aステータス ②【編集可】数値のみ -->
+        <!-- 左：選手Aステータス（編集ポイント②：数値のみ編集可能） -->
         <ul class="status-list">
-            <li>打撃 <span class="editable status-val" contenteditable="true">6</span></li>
-            <li>関節 <span class="editable status-val" contenteditable="true">4</span></li>
-            <li>投げ <span class="editable status-val" contenteditable="true">3</span></li>
-            <li>飛び <span class="editable status-val" contenteditable="true">3</span></li>
-            <li>締め <span class="editable status-val" contenteditable="true">3</span></li>
-            <li>性的 <span class="editable status-val" contenteditable="true">1</span></li>
+            <li>打撃 <span class="editable status-val" id="statA_1" contenteditable="true">6</span></li>
+            <li>関節 <span class="editable status-val" id="statA_2" contenteditable="true">4</span></li>
+            <li>投げ <span class="editable status-val" id="statA_3" contenteditable="true">3</span></li>
+            <li>飛び <span class="editable status-val" id="statA_4" contenteditable="true">3</span></li>
+            <li>締め <span class="editable status-val" id="statA_5" contenteditable="true">3</span></li>
+            <li>性的 <span class="editable status-val" id="statA_6" contenteditable="true">1</span></li>
         </ul>
 
-        <!-- 中央：ターン行動ログ（グリッドで縦横を完全に直線化） -->
-        <div class="action-log">
-            <div class="action-row">
-                <span class="damage-pop left-dmg" id="log_dmg_L1">4ダメージ</span>
-                <span class="left-num" id="log_num_L1">11</span>
-                <span>関節</span>
-                <span class="right-num" id="log_num_R1">7</span>
-                <span class="damage-pop right-dmg" id="log_dmg_R1"></span>
-            </div>
-            <div class="action-row">
-                <span class="damage-pop left-dmg" id="log_dmg_L2"></span>
-                <span class="left-num" id="log_num_L2">3</span>
-                <span>性的</span>
-                <span class="right-num" id="log_num_R2">23</span>
-                <span class="damage-pop right-dmg" id="log_dmg_R2">20ダメージ</span>
-            </div>
-            <div class="action-row">
-                <span class="damage-pop left-dmg" id="log_dmg_L3">6ダメージ</span>
-                <span class="left-num" id="log_num_L3">15</span>
-                <span>打撃</span>
-                <span class="right-num" id="log_num_R3">9</span>
-                <span class="damage-pop right-dmg" id="log_dmg_R3"></span>
-            </div>
-            <div class="action-row">
-                <span class="damage-pop left-dmg" id="log_dmg_L4">2ダメージ</span>
-                <span class="left-num" id="log_num_L4">10</span>
-                <span>投げ</span>
-                <span class="right-num" id="log_num_R4">8</span>
-                <span class="damage-pop right-dmg" id="log_dmg_R4"></span>
-            </div>
+        <!-- 中央：ターン行動ログ（自動生成される場所 / 中央の技名は一直線に整列） -->
+        <div class="action-log" id="actionLogContainer">
+            <!-- ここに自動でターン行が追加されます -->
+            <div style="text-align:center; color:#555; font-size:1rem; grid-column:span 5;">時間を設定するとここにログが生成されます</div>
         </div>
 
-        <!-- 右：選手Bステータス ②【編集可】数値のみ -->
+        <!-- 右：選手Bステータス（編集ポイント②：数値のみ編集可能） -->
         <ul class="status-list" style="text-align: right;">
-            <li>打撃 <span class="editable status-val" contenteditable="true">3</span></li>
-            <li>関節 <span class="editable status-val" contenteditable="true">4</span></li>
-            <li>投げ <span class="editable status-val" contenteditable="true">2</span></li>
-            <li>飛び <span class="editable status-val" contenteditable="true">4</span></li>
-            <li>締め <span class="editable status-val" contenteditable="true">1</span></li>
-            <li>性的 <span class="editable status-val" contenteditable="true">6</span></li>
+            <li>打撃 <span class="editable status-val" id="statB_1" contenteditable="true">3</span></li>
+            <li>関節 <span class="editable status-val" id="statB_2" contenteditable="true">4</span></li>
+            <li>投げ <span class="editable status-val" id="statB_3" contenteditable="true">2</span></li>
+            <li>飛び <span class="editable status-val" id="statB_4" contenteditable="true">4</span></li>
+            <li>締め <span class="editable status-val" id="statB_5" contenteditable="true">1</span></li>
+            <li>性的 <span class="editable status-val" id="statB_6" contenteditable="true">6</span></li>
         </ul>
     </div>
 
-    <!-- ダイス詳細ログ（自動で記録が書き換わる場所） -->
+    <!-- ダイス詳細ログ -->
     <div class="dice-log-area">
-        <div id="diceLogA" style="white-space: pre-line;">4d6=2,3,1,5
-1d6=3
-6d6=2,1,2,3,3,4
-3d6=1,6,3</div>
-        <div id="diceLogB" style="text-align: right; white-space: pre-line;">4d6=2,3,1,1
-6d6=3,5,6,2,3,4
-3d6=2,3,4
-2d6=5,3</div>
+        <div id="diceLogA" style="white-space: pre-line;"></div>
+        <div id="diceLogB" style="text-align: right; white-space: pre-line;"></div>
     </div>
 
-    <!-- 与えたダメージ -->
+    <!-- 与えたダメージ（合計値の自動計算） -->
     <div class="total-damage-section">
         <div class="damage-title">与えたダメージ</div>
         <div class="damage-scores">
-            <span id="totalDmgA">12</span>
-            <span id="totalDmgB">20</span>
+            <span id="totalDmgA">0</span>
+            <span id="totalDmgB">0</span>
         </div>
     </div>
 
     <!-- 勝敗 -->
-    <div class="winner-announce"><span id="winnerName">選手B</span>の勝利！</div>
+    <div class="winner-announce" id="winnerDiv"><span id="winnerName">---</span>の勝利！</div>
 </div>
 
 <script>
-    // --- 1. 名前のリアルタイム連動連動 ---
-    const nameAInput = document.getElementById('nameA');
-    const nameBInput = document.getElementById('nameB');
-    const winnerNameDisp = document.getElementById('winnerName');
+    // 技の定義（出目に対応）
+    const skillNames = { 1: "打撃", 2: "関節", 3: "投げ", 4: "飛び", 5: "締め", 6: "性的" };
 
-    function updateWinner() {
-        // 通常は現在の勝者（例としてB）を表示。必要に応じてロジックで書き換え可能
-        winnerNameDisp.innerText = nameBInput.innerText;
-    }
-    nameBInput.addEventListener('input', updateWinner);
-    nameAInput.addEventListener('input', updateWinner);
-
-
-    // --- 2. 自動ダイスロールシステム ---
-    // 指定された個数のd6（6面ダイス）を振る関数
+    // ダイスを振る共通関数
     function rollDice(count) {
         let results = [];
+        let total = 0;
         for (let i = 0; i < count; i++) {
-            results.push(Math.floor(Math.random() * 6) + 1);
+            let roll = Math.floor(Math.random() * 6) + 1;
+            results.push(roll);
+            total += roll;
         }
-        return results;
+        return { results, total };
     }
 
-    // 文字列の「YYYY/MM/DD/HH:MM」をJavaScriptの日付オブジェクトに変換する関数
+    // 時刻文字列をDateに変換
     function parseTargetTime(str) {
         const parts = str.trim().split(/[\/\:]/);
         if (parts.length < 5) return null;
-        // 月は0から始まるので -1 する
         return new Date(parts[0], parts[1] - 1, parts[2], parts[3], parts[4], 0);
     }
 
     let diceRolled = false;
 
-    // 1秒ごとに現在時刻をチェックするタイマーループ
+    // 1秒ごとの監視ループ
     setInterval(() => {
         const timeStr = document.getElementById('targetTime').innerText;
+        const targetDate = parseTargetTime(timeStr);
+        const statusDiv = document.getElementById('timerStatus');
+
+        if (!targetDate || isNaN(targetDate.getTime())) {
+            statusDiv.innerText = "時刻エラー (例: 2026/08/23/23:00)";
+            return;
+        }
+
+        const now = new Date();
+        const diff = targetDate.getTime() - now.getTime();
+
+        if (diff > 0) {
+            statusDiv.innerText = `ダイス実行まであと: ${Math.ceil(diff / 1000)}秒`;
+            diceRolled = false;
+        } else {
+            if (!diceRolled) {
+                executeTRPGRules();
+                diceRolled = true;
+            }
+            statusDiv.innerText = "ダイス処理完了";
+        }
+    }, 1000);
+
+    // TRPGルールに基づくダイス処理とログ生成の核心部分
+    function executeTRPGRules() {
+        // 1. ターン数を取得し、その数だけd6を振って技種を決定
+        const turnCount = parseInt(document.getElementById('turnNum').innerText) || 1;
+        const turnDice = rollDice(turnCount);
+        document.getElementById('headerDiceResult').innerText = `${turnCount}d6=${turnDice.results.join(',')}`;
+
+        // 2. プレイヤーの現在のステータス値（ダイス個数）を取得
+        const statsA = {
+            1: parseInt(document.getElementById('statA_1').innerText) || 0,
+            2: parseInt(document.getElementById('statA_2').innerText) || 0,
+            3: parseInt(document.getElementById('statA_3').innerText) || 0,
+            4: parseInt(document.getElementById('statA_4').innerText) || 0,
+            5: parseInt(document.getElementById('statA_5').innerText) || 0,
+            6: parseInt(document.getElementById('statA_6').innerText) || 0
+        };
+        const statsB = {
+コードは注意してご使用ください。1: parseInt(document.getElementById('statB_1').innerText) || 0,2: parseInt(document.getElementById('statB_2').innerText) || 0,3: parseInt(document.getElementById('statB_3').innerText) || 0,4: parseInt(document.getElementById('statB_4').innerText) || 0,5: parseInt(document.getElementById('statB_5').innerText) || 0,6: parseInt(document.getElementById('statB_6').innerText) || 0};// 各エリアのリセットconst container = document.getElementById('actionLogContainer');container.innerHTML = '';let logTextA = "";let logTextB = "";let totalDamageA = 0;let totalDamageB = 0;// 3. 決まった技種の順番（出目の順番）に処理を実行turnDice.results.forEach((diceOut) => {const skillName = skillNames[diceOut]; // 出目に対応する技名// 選手A・Bのその技に対するステータス（ダイス個数）を取得const diceCountA = statsA[diceOut];const diceCountB = statsB[diceOut];// それぞれダイスを振るconst rollA = rollDice(diceCountA);const rollB = rollDice(diceCountB);// 詳細ダイスログテキストの構築logTextA += ${diceCountA}d6=${rollA.results.join(',') || '0'}\n;logTextB += ${diceCountB}d6=${rollB.results.join(',') || '0'}\n;// 出目の合計値が大きい方がダメージを与える（同点なら0）let dmgA = 0;let dmgB = 0;let popTextA = "";let popTextB = "";if (rollA.total > rollB.total) {dmgA = rollA.total - rollB.total; // 差分をダメージとする（ルールに応じて変更可）totalDamageA += dmgA;popTextA = ${dmgA}ダメージ;} else if (rollB.total > rollA.total) {dmgB = rollB.total - rollA.total;totalDamageB += dmgB;popTextB = ${dmgB}ダメージ;}// 一直線に揃うグリッド行（HTML要素）を作成して画面の中央に追加const row = document.createElement('div');row.className = 'action-row';row.innerHTML = <span class="damage-pop left-dmg">${popTextA}</span> <span class="left-num">${rollA.total}</span> <span>${skillName}</span> <span class="right-num">${rollB.total}</span> <span class="damage-pop right-dmg">${popTextB}</span>;container.appendChild(row);});// 4. 下部ログと合計ダメージの書き換えdocument.getElementById('diceLogA').innerText = logTextA.trim();document.getElementById('diceLogB').innerText = logTextB.trim();document.getElementById('totalDmgA').innerText = totalDamageA;document.getElementById('totalDmgB').innerText = totalDamageB;// 5. 最終的な勝利判定（与えた合計ダメージが多い方）const nameA = document.getElementById('nameA').innerText;const nameB = document.getElementById('nameB').innerText;if (totalDamageA > totalDamageB) {document.getElementById('winnerName').innerText = nameA;} else if (totalDamageB > totalDamageA) {document.getElementById('winnerName').innerText = nameB;} else {document.getElementById('winnerDiv').innerText = "引き分け！";}}
