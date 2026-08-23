@@ -1,9 +1,9 @@
-html<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="ja">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>フラッシュリング - 設定ツール</title>
+    <title>フラッシュリング</title>
     <style>
         /* 全体の背景と文字色（画像を再現） */
         body {
@@ -15,6 +15,7 @@ html<!DOCTYPE html>
             display: flex;
             flex-direction: column;
             align-items: center;
+            user-select: none;
         }
 
         .container {
@@ -22,96 +23,51 @@ html<!DOCTYPE html>
             max-width: 600px;
         }
 
-        /* 編集用フォームのスタイル */
-        .edit-form {
-            background-color: #1a1a1a;
-            border: 1px solid #333;
-            border-radius: 8px;
-            padding: 15px;
-            margin-bottom: 30px;
-            width: 100%;
-            box-sizing: border-box;
-        }
-        .form-title {
-            margin-top: 0;
-            font-size: 1.1rem;
-            color: #aaa;
-            border-bottom: 1px solid #333;
-            padding-bottom: 5px;
-        }
-        .form-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 15px;
-        }
-        .form-group {
-            display: flex;
-            flex-direction: column;
-            gap: 5px;
-        }
-        .form-group label {
-            font-size: 0.85rem;
-            color: #ccc;
-        }
-        .form-group input {
-            background-color: #333;
-            border: 1px solid #555;
-            color: #fff;
-            padding: 6px;
-            border-radius: 4px;
-            font-size: 1rem;
-        }
-        .status-inputs {
-            display: grid;
-            grid-template-columns: repeat(2, 1fr);
-            gap: 5px;
-        }
-        .status-inputs div {
-            display: flex;
-            align-items: center;
-            gap: 5px;
-        }
-        .status-inputs input {
-            width: 50px;
-        }
-
-        /* 印刷・画像保存時にフォームを隠すためのボタン */
-        .hide-btn {
-            background-color: #444;
-            color: white;
-            border: none;
-            padding: 8px 12px;
-            border-radius: 4px;
-            cursor: pointer;
-            margin-bottom: 15px;
-            width: 100%;
-        }
-        .hide-btn:hover { background-color: #555; }
-
-        /* --- 以下、サイトの表示用スタイル --- */
+        /* タイトルエリア */
         h1 {
             text-align: center;
-            font-size: 2rem;
-            margin-bottom: 20px;
+            font-size: 2.2rem;
+            margin-bottom: 30px;
+            letter-spacing: 2px;
         }
 
+        /* 試合情報・ヘッダー */
         .match-info {
             display: flex;
             justify-content: space-between;
             align-items: flex-start;
             margin-bottom: 20px;
         }
+
+        /* 直接編集できるテキストの共通スタイル */
+        .editable {
+            cursor: pointer;
+            border-bottom: 1px dashed #555;
+            transition: background-color 0.2s;
+        }
+        .editable:hover {
+            background-color: #222;
+        }
+        .editable:focus {
+            background-color: #333;
+            outline: none;
+            border-bottom: 1px solid #fff;
+            padding: 0 4px;
+        }
+
         .player-header {
-            font-size: 1.5rem;
+            font-size: 1.8rem;
             margin: 0;
-            max-width: 180px;
-            word-wrap: break-word;
+            font-weight: bold;
+            display: inline-block;
+            min-width: 100px;
         }
         .turn-details {
             text-align: center;
             font-size: 0.9rem;
         }
 
+        /* メインの対戦エリア（3分割） */
         .battle-area {
             display: grid;
             grid-template-columns: 1fr 1.2fr 1fr;
@@ -124,214 +80,183 @@ html<!DOCTYPE html>
             list-style: none;
             padding: 0;
             margin: 0;
-            font-size: 1.2rem;
+            font-size: 1.3rem;
             font-weight: bold;
+            line-height: 1.6;
         }
         .status-list li {
-            margin-bottom: 4px;
+            margin-bottom: 6px;
+        }
+        .status-val {
+            display: inline-block;
+            min-width: 20px;
+            text-align: center;
         }
 
+        /* 中央の行動ログ */
         .action-log {
             display: flex;
             flex-direction: column;
-            gap: 8px;
+            gap: 12px;
         }
         .action-row {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            font-size: 1.4rem;
+            font-size: 1.5rem;
             font-weight: bold;
         }
         .damage-pop {
-            font-size: 0.7rem;
+            font-size: 0.75rem;
             color: #ccc;
             white-space: nowrap;
         }
 
+        /* ダイスのログエリア */
         .dice-log-area {
             display: flex;
             justify-content: space-between;
             font-size: 0.75rem;
             color: #bbb;
-            margin-bottom: 20px;
+            margin-bottom: 30px;
+            line-height: 1.4;
         }
 
+        /* 与えたダメージ */
         .total-damage-section {
             text-align: center;
-            margin-bottom: 20px;
+            margin-bottom: 30px;
         }
         .damage-title {
-            font-size: 1.2rem;
+            font-size: 1.3rem;
             margin-bottom: 5px;
+            font-weight: bold;
         }
         .damage-scores {
             display: flex;
             justify-content: space-around;
-            font-size: 3rem;
+            font-size: 3.5rem;
             font-weight: bold;
         }
 
+        /* 勝者アナウンス */
         .winner-announce {
             text-align: center;
-            font-size: 2.2rem;
+            font-size: 2.5rem;
             font-weight: bold;
             margin-top: 10px;
-        }
-
-        /* フォーム非表示モード用 */
-        body.hide-mode .edit-form,
-        body.hide-mode .hide-btn {
-            display: none;
+            letter-spacing: 1px;
         }
     </style>
 </head>
 <body>
 
 <div class="container">
+    <!-- タイトル -->
+    <h1>フラッシュリング</h1>
 
-    <!-- 入力フォームエリア -->
-    <div class="edit-form" id="inputForm">
-        <p class="form-title">キャラ名・ステータス設定</p>
-        <div class="form-grid">
-            <!-- 選手A入力 -->
-            <div class="form-group">
-                <label>選手Aの名前</label>
-                <input type="text" id="inputNameA" value="選手A">
-                <label>ステータス</label>
-                <div class="status-inputs">
-                    <div>打撃:<input type="number" id="pA_atk" value="6"></div>
-                    <div>関節:<input type="number" id="pA_joint" value="4"></div>
-                    <div>投げ:<input type="number" id="pA_throw" value="3"></div>
-                    <div>飛び:<input type="number" id="pA_fly" value="3"></div>
-                    <div>締め:<input type="number" id="pA_choke" value="3"></div>
-                    <div>性的:<input type="number" id="pA_sex" value="1"></div>
-                </div>
-            </div>
-            <!-- 選手B入力 -->
-            <div class="form-group">
-                <label>選手Bの名前</label>
-                <input type="text" id="inputNameB" value="選手B">
-                <label>ステータス</label>
-                <div class="status-inputs">
-                    <div>打撃:<input type="number" id="pB_atk" value="3"></div>
-                    <div>関節:<input type="number" id="pB_joint" value="4"></div>
-                    <div>投げ:<input type="number" id="pB_throw" value="2"></div>
-                    <div>飛び:<input type="number" id="pB_fly" value="4"></div>
-                    <div>締め:<input type="number" id="pB_choke" value="1"></div>
-                    <div>性的:<input type="number" id="pB_sex" value="6"></div>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <button class="hide-btn" onclick="toggleForm()">設定入力を隠す（画面保存・確認用）</button>
-
-    <!-- === ここから対戦画面の再現表示 === -->
-    <h1 style="cursor: pointer;" onclick="toggleForm()">フラッシュリング</h1>
-
+    <!-- 試合情報 -->
     <div class="match-info">
-        <h2 class="player-header" id="dispNameA">選手A</h2>
+        <h2 class="player-header"><span class="editable" id="nameA" contenteditable="true">選手A</span></h2>
         <div class="turn-details">
-            <div style="font-size: 1.4rem; font-weight: bold;">ターン数 4</div>
-            <div>2026/08/10/23:00</div>
-            <div>4d6=2,1,6,3</div>
+            <div style="font-size: 1.5rem; font-weight: bold; margin-bottom: 4px;">
+                ターン数 <span class="editable" contenteditable="true">4</span>
+            </div>
+            <div class="editable" contenteditable="true">2026/08/10/23:00</div>
+            <div class="editable" contenteditable="true">4d6=2,1,6,3</div>
         </div>
-        <h2 class="player-header" id="dispNameB" style="text-align: right;">選手B</h2>
+        <h2 class="player-header" style="text-align: right;"><span class="editable" id="nameB" contenteditable="true">選手B</span></h2>
     </div>
 
+    <!-- メイン対戦エリア -->
     <div class="battle-area">
         <!-- 左：選手Aステータス -->
         <ul class="status-list">
-            <li id="dispA_atk">打撃 6</li>
-            <li id="dispA_joint">関節 4</li>
-            <li id="dispA_throw">投げ 3</li>
-            <li id="dispA_fly">飛び 3</li>
-            <li id="dispA_choke">締め 3</li>
-            <li id="dispA_sex">性的 1</li>
+            <li>打撃 <span class="editable status-val" contenteditable="true">6</span></li>
+            <li>関節 <span class="editable status-val" contenteditable="true">4</span></li>
+            <li>投げ <span class="editable status-val" contenteditable="true">3</span></li>
+            <li>飛び <span class="editable status-val" contenteditable="true">3</span></li>
+            <li>締め <span class="editable status-val" contenteditable="true">3</span></li>
+            <li>性的 <span class="editable status-val" contenteditable="true">1</span></li>
         </ul>
 
         <!-- 中央：ターン行動ログ -->
         <div class="action-log">
             <div class="action-row">
-                <span class="damage-pop">4ダメージ</span>
-                <span>11</span>
+                <span class="editable damage-pop" contenteditable="true">4ダメージ</span>
+                <span class="editable" contenteditable="true">11</span>
                 <span>関節</span>
-                <span>7</span>
+                <span class="editable" contenteditable="true">7</span>
                 <span></span>
             </div>
             <div class="action-row">
                 <span></span>
-                <span>3</span>
+                <span class="editable" contenteditable="true">3</span>
                 <span>性的</span>
-                <span>23</span>
-                <span class="damage-pop">20ダメージ</span>
+                <span class="editable" contenteditable="true">23</span>
+                <span class="editable damage-pop" contenteditable="true">20ダメージ</span>
             </div>
             <div class="action-row">
-                <span class="damage-pop">6ダメージ</span>
-                <span>15</span>
+                <span class="editable damage-pop" contenteditable="true">6ダメージ</span>
+                <span class="editable" contenteditable="true">15</span>
                 <span>打撃</span>
-                <span>9</span>
+                <span class="editable" contenteditable="true">9</span>
                 <span></span>
             </div>
             <div class="action-row">
-                <span class="damage-pop">2ダメージ</span>
-                <span>10</span>
+                <span class="editable damage-pop" contenteditable="true">2ダメージ</span>
+                <span class="editable" contenteditable="true">10</span>
                 <span>投げ</span>
-                <span>8</span>
+                <span class="editable" contenteditable="true">8</span>
                 <span></span>
             </div>
         </div>
 
         <!-- 右：選手Bステータス -->
         <ul class="status-list" style="text-align: right;">
-            <li id="dispB_atk">打撃 3</li>
-            <li id="dispB_joint">関節 4</li>
-            <li id="dispB_throw">投げ 2</li>
-            <li id="dispB_fly">飛び 4</li>
-            <li id="dispB_choke">締め 1</li>
-            <li id="dispB_sex">性的 6</li>
+            <li>打撃 <span class="editable status-val" contenteditable="true">3</span></li>
+            <li>関節 <span class="editable status-val" contenteditable="true">4</span></li>
+            <li>投げ <span class="editable status-val" contenteditable="true">2</span></li>
+            <li>飛び <span class="editable status-val" contenteditable="true">4</span></li>
+            <li>締め <span class="editable status-val" contenteditable="true">1</span></li>
+            <li>性的 <span class="editable status-val" contenteditable="true">6</span></li>
         </ul>
     </div>
 
     <!-- ダイス詳細ログ -->
     <div class="dice-log-area">
-        <div>
-            4d6=2,3,1,5<br>
-            1d6=3<br>
-            6d6=2,1,2,3,3,4<br>
-            3d6=1,6,3
-        </div>
-        <div style="text-align: right;">
-            4d6=2,3,1,1<br>
-            6d6=3,5,6,2,3,4<br>
-            3d6=2,3,4<br>
-            2d6=5,3
-        </div>
+        <div class="editable" contenteditable="true" style="white-space: pre-line;">4d6=2,3,1,5
+1d6=3
+6d6=2,1,2,3,3,4
+3d6=1,6,3</div>
+        <div class="editable" contenteditable="true" style="text-align: right; white-space: pre-line;">4d6=2,3,1,1
+6d6=3,5,6,2,3,4
+3d6=2,3,4
+2d6=5,3</div>
     </div>
 
     <!-- 与えたダメージ -->
     <div class="total-damage-section">
         <div class="damage-title">与えたダメージ</div>
         <div class="damage-scores">
-            <span>12</span>
-            <span>20</span>
+            <span class="editable" contenteditable="true">12</span>
+            <span class="editable" contenteditable="true">20</span>
         </div>
     </div>
 
     <!-- 勝敗 -->
-    <div class="winner-announce" id="dispWinner">選手Bの勝利！</div>
+    <div class="winner-announce"><span id="winnerName">選手B</span>の勝利！</div>
 </div>
 
 <script>
-    // 入力フォームの値を画面にリアルタイム反映するJavaScript
-    const inputs = [
-        { id: 'inputNameA', target: 'dispNameA', prefix: '', isWinnerUpdate: true },
-        { id: 'inputNameB', target: 'dispNameB', prefix: '', isWinnerUpdate: true },
-        { id: 'pA_atk', target: 'dispA_atk', prefix: '打撃 ' },
-        { id: 'pA_joint', target: 'dispA_joint', prefix: '関節 ' },
-        { id: 'pA_throw', target: 'dispA_throw', prefix: '投げ ' },
-        { id: 'pA_fly', target: 'dispA_fly', prefix: '飛び ' },
-        { id: 'pA_choke', target: 'dispA_choke', prefix: '締め ' },
-コードは注意してご使用ください。{ id: 'pA_sex', target: 'dispA_sex', prefix: '性的 ' },{ id: 'pB_atk', target: 'dispB_atk', prefix: '打撃 ' },{ id: 'pB_joint', target: 'dispB_joint', prefix: '関節 ' },{ id: 'pB_throw', target: 'dispB_throw', prefix: '投げ ' },{ id: 'pB_fly', target: 'dispB_fly', prefix: '飛び ' },{ id: 'pB_choke', target: 'dispB_choke', prefix: '締め ' },{ id: 'pB_sex', target: 'dispB_sex', prefix: '性的 ' }];inputs.forEach(item => {document.getElementById(item.id).addEventListener('input', (e) => {document.getElementById(item.target).innerText = item.prefix + e.target.value;// 名前の変更に合わせて、最下部の「〇〇の勝利！」の文字も連動させるif (item.isWinnerUpdate) {updateWinnerName();}});});function updateWinnerName() {const nameB = document.getElementById('inputNameB').value;document.getElementById('dispWinner').innerText = nameB + 'の勝利！';}// フォームを隠して画像と同じ見た目にするための切り替え機能function toggleForm() {document.body.classList.toggle('hide-mode');const btn = document.querySelector('.hide-btn');if (document.body.classList.contains('hide-mode')) {btn.innerText = '設定入力を表示する';} else {btn.innerText = '設定入力を隠す（画面保存・確認用）';}}
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          
+    // 選手Bの名前が変わったら、最下部の勝利アナウンスも自動連動する仕組み
+    const nameBInput = document.getElementById('nameB');
+    const winnerNameDisp = document.getElementById('winnerName');
+
+    nameBInput.addEventListener('input', () => {
+        winnerNameDisp.innerText = nameBInput.innerText;
+    });
+</script>
+
+</body>
+</html>
